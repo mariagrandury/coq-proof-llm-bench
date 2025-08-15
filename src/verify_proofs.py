@@ -3,37 +3,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, List
 
 from .assemble import assemble_coq_file
 from .check_coq import check_with_coqc
-
-# ------------------------- IO helpers -------------------------
-
-
-def read_jsonl(path: str) -> List[Dict[str, Any]]:
-    out = []
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                out.append(json.loads(line))
-    return out
-
-
-def write_jsonl(path: str, rows: Iterable[Dict[str, Any]]) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        for r in rows:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
-
-
-def sanitize_dirname(s: str) -> str:
-    return re.sub(r"[^A-Za-z0-9_.-]", "_", s)
-
-
-# ------------------------- Stats -----------------------------
+from .utils import read_jsonl, write_jsonl
 
 
 def summarize_passk(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -106,9 +81,6 @@ def summarize_passk(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
         "by_category": finalize(by_cat),
         "by_difficulty": finalize(by_diff),
     }
-
-
-# ------------------------- Verification ----------------------
 
 
 def verify_proofs_file(proofs_path: str, timeout: int) -> Dict[str, Any]:

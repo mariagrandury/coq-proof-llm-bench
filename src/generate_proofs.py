@@ -3,14 +3,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
-from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List
 
-from .prompt import build_prompt
+from .sampler import sample_proof
 from .schemas import GenConfig, LemmaSpec
-
-# ------------------------- IO helpers -------------------------
+from .utils import sanitize_dirname, write_jsonl
 
 
 def load_lemmas(path: str) -> List[LemmaSpec]:
@@ -21,83 +18,6 @@ def load_lemmas(path: str) -> List[LemmaSpec]:
                 obj = json.loads(line)
                 items.append(LemmaSpec(**obj))
     return items
-
-
-def write_jsonl(path: str, rows: Iterable[Dict[str, Any]]) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        for r in rows:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
-
-
-def sanitize_dirname(s: str) -> str:
-    return re.sub(r"[^A-Za-z0-9_.-]", "_", s)
-
-
-# ------------------------- Sampler ---------------------------
-
-_BLOCK_RE = re.compile(r"Proof\.(.*?)Qed\.", re.S)
-
-
-def _normalize_to_block(s: str) -> str:
-    m = _BLOCK_RE.search(s)
-    if m:
-        return f"Proof.{m.group(1)}Qed."
-    body = s.strip()
-    if not body.endswith("Qed."):
-        body += "\nQed."
-    if not body.startswith("Proof."):
-        body = "Proof.\n" + body
-    return body
-
-
-@dataclass
-class HFSession:
-    tok: Any
-    model: Any
-
-
-def _load_hf_session(model_id: str) -> HFSession:
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-
-    tok = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
-    return HFSession(tok=tok, model=model)
-
-
-def sample_proof(
-    lemma: LemmaSpec, cfg: GenConfig, try_idx: int, session: Optional[HFSession]
-) -> str:
-    """
-    Stateless sampler. For backend='hf' pass a loaded HFSession to avoid reloading per sample.
-    """
-    if cfg.backend == "baseline":
-        bp = getattr(lemma, "baseline_proof", None)
-        return _normalize_to_block(bp or "Proof. Fail trivial. Qed.")
-    # hf
-    assert session is not None, "HF session required for backend='hf'"
-    import torch
-
-    torch.manual_seed(try_idx)  # per-try seed
-    prompt = build_prompt(lemma)
-    input_ids = session.tok(prompt, return_tensors="pt").to(session.model.device)
-    eos = session.tok.encode("Qed.", add_special_tokens=False)
-    eos_id = eos[0] if eos else None
-    out = session.model.generate(
-        **input_ids,
-        max_new_tokens=cfg.max_new_tokens,
-        do_sample=True,
-        temperature=cfg.temperature,
-        top_p=cfg.top_p,
-        eos_token_id=eos_id,
-    )
-    gen = session.tok.decode(
-        out[0][input_ids["input_ids"].shape[1] :], skip_special_tokens=True
-    )
-    return _normalize_to_block(gen)
-
-
-# ------------------------- Main logic ------------------------
 
 
 def generate_for_model(
@@ -112,14 +32,9 @@ def generate_for_model(
     """
     rows: List[Dict[str, Any]] = []
 
-    if cfg.backend == "hf":
-        session = _load_hf_session(model_id)
-    else:
-        session = None
-
     for lemma in lemmas:
         for i in range(cfg.k):
-            proof = sample_proof(lemma, cfg, try_idx=i, session=session)
+            proof = sample_proof(lemma, cfg, try_idx=i, model_id=model_id)
             rows.append(
                 {
                     "id": lemma.id,
@@ -203,12 +118,12 @@ def main():
 
     os.makedirs(args.outdir, exist_ok=True)
 
-    for mid in models if args.backend == "hf" else ["baseline"]:
-        print(f"[GEN] Generating for: {mid}")
-        # For HF we pass the model id via generate_for_model; for baseline mid is 'baseline'
+    for model_id in models if args.backend == "hf" else ["baseline"]:
+        print(f"[GEN] Generating for: {model_id}")
+        # For HF we pass the model id via generate_for_model; for baseline model_id is 'baseline'
         proofs_path = generate_for_model(
             lemmas=lemmas,
-            model_id=mid if args.backend == "hf" else "",
+            model_id=model_id if args.backend == "hf" else "",
             cfg=cfg,
             outdir=args.outdir,
         )

@@ -207,7 +207,8 @@ python3 -m src.generate_proofs \
 # Or many models from a file (one HF id per line)
 python3 -m src.generate_proofs \
   --lemmas data/lemmas_auto.jsonl \
-  --models_file models.txt
+  --models_file models.txt \
+  --limit 3
 
 Each model writes to results/batch/<model_id_sanitized>/proofs.jsonl.
 
