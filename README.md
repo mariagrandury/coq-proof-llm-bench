@@ -188,3 +188,57 @@ Then evaluate with HF model using the new JSONL file:
 ```
 python3 -m src.run --backend hf --model distilbert/distilgpt2 -k 2 --limit 5
 ```
+
+
+## New usage
+
+## Generate proofs on a GPU node (no Coq needed)
+
+```bash
+python -m src.gen_dataset \
+  --out data/lemmas_auto.jsonl \
+  --langs en es fr \
+  --n_per_lang 30 \
+  --seed 7
+
+# Single model
+python -m src.generate_proofs \
+  --lemmas data/lemmas_auto.jsonl \
+  --backend hf \
+  --model Qwen/Qwen2.5-1.5B-Instruct \
+  -k 5 \
+  --temperature 0.7 \
+  --top_p 0.9 \
+  --max_new_tokens 256 \
+  --outdir results/batch
+
+# Or many models from a file (one HF id per line)
+python3 -m src.generate_proofs \
+  --lemmas data/lemmas_auto.jsonl \
+  --backend hf \
+  --models_file models.txt \
+  -k 5 --temperature 0.7 --top_p 0.9 --max_new_tokens 256 \
+  --outdir results/batch
+
+Each model writes to results/batch/<model_id_sanitized>/proofs.jsonl.
+
+Verify proofs locally with Coq
+
+# Single proofs file
+python -m src.verify_proofs \
+  --proofs results/batch/Qwen_Qwen2.5-1.5B-Instruct/proofs.jsonl \
+  --timeout 15
+
+# Or verify all subfolders under a directory
+python3 -m src.verify_proofs \
+  --proofs_dir results/batch \
+  --timeout 15
+
+This writes, per model:
+
+results.jsonl — per-try verification outcomes
+
+summary.json — pass@1, pass@k, and simple stratified stats
+
+And a global overall_summary.json in results/batch/ when using --proofs_dir.
+```
