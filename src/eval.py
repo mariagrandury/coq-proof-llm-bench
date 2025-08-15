@@ -1,9 +1,11 @@
-import json, time
-from typing import Iterable, Dict, Any
-from .schemas import LemmaSpec, GenConfig, Result
-from .generate import gen_proof
+import json
+import time
+from typing import Any, Dict, Iterable
+
 from .assemble import assemble_coq_file
 from .check_coq import check_with_coqc
+from .generate import gen_proof
+from .schemas import GenConfig, LemmaSpec, Result
 
 # JSONL utils
 

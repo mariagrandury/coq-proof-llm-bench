@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 
 @dataclass
 class LemmaSpec:
@@ -18,6 +20,7 @@ class LemmaSpec:
     requires_classical: bool = False
     baseline_proof: Optional[str] = None
 
+
 @dataclass
 class GenConfig:
     backend: str  # 'baseline' or 'hf'
@@ -26,6 +29,7 @@ class GenConfig:
     temperature: float = 0.7
     top_p: float = 0.9
     k: int = 5
+
 
 @dataclass
 class Result:

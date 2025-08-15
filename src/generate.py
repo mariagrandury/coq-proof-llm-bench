@@ -1,5 +1,6 @@
 import re
 from typing import Optional
+
 from .schemas import GenConfig, LemmaSpec
 
 # ——— helpers ———
@@ -28,8 +29,8 @@ def gen_proof(lemma: LemmaSpec, cfg: GenConfig, seed: int) -> str:
         return "Proof. Fail trivial. Qed."  # will fail; for testing
     elif cfg.backend == "hf":
         try:
-            from transformers import AutoTokenizer, AutoModelForCausalLM
             import torch
+            from transformers import AutoModelForCausalLM, AutoTokenizer
         except Exception as e:
             raise RuntimeError("Install transformers to use hf backend") from e
         tok = AutoTokenizer.from_pretrained(cfg.model_name)
