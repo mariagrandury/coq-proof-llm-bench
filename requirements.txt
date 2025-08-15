@@ -1,0 +1,7 @@
+transformers>=4.43
+accelerate>=0.33
+huggingface_hub>=0.24
+pydantic>=2.7
+orjson>=3.10
+# runtime utils
+tqdm>=4.66
