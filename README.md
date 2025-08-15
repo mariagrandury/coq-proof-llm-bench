@@ -7,24 +7,35 @@ This is a **step‑by‑step, runnable** mini-project tailored for a course on l
 ## 0) Project layout
 
 ```
-llm-ling-proof-bench/
-  README.md                 # (this file)
-  requirements.txt
-  docker/
-    Dockerfile
-  data/
-    lemmas.jsonl            # small seed benchmark
-  src/
-    schemas.py
-    prompt.py
-    generate.py
-    assemble.py
-    check_coq.py
-    eval.py
-    run.py                  # CLI entry point
-  results/
-    (created at runtime)
+coq-proof-llm-bench/
+    README.md                 # This guide
+    requirements.txt          # Python dependencies
+    docker/
+        Dockerfile              # Docker setup for Coq + Python environment
+    data/
+        lemmas.jsonl            # Small benchmark of linguistic lemmas
+    src/
+        schemas.py              # Data classes for lemmas, configs, and results
+        prompt.py               # Builds LLM prompts from lemma specs
+        generate.py             # Generates proofs (baseline or HF model)
+        assemble.py             # Combines lemma + proof into a Coq file
+        check_coq.py            # Compiles Coq file to verify proof correctness
+        eval.py                 # Loads lemmas, runs generation & checking, logs results
+        run.py                  # CLI entry point for running experiments
+    results/                  # Stores logs and outputs after runs
 ```
+
+1. `run.py` is the main entry point → calls `eval.py`.
+
+2. `eval.py` loads lemmas from `data/lemmas.jsonl` using `schemas.py` definitions.
+
+3. For each lemma, `generate.py` produces a proof (either from a baseline or HF model), using `prompt.py` to format the input.
+
+4. The proof is merged with the lemma via `assemble.py` into a `.v` Coq file.
+
+5. `check_coq.py` compiles the `.v` file with `coqc` to check validity.
+
+6. Results are logged in `results/results.jsonl`.
 
 ---
 
@@ -32,16 +43,71 @@ llm-ling-proof-bench/
 
 ### Option A: Local (Python + Coq installed)
 
-1. Install **Coq 8.17.x** or **8.18.x** and ensure `coqc` is on PATH.
-2. `python -m venv .venv && source .venv/bin/activate`
+1. Install **Coq 8.18.x** and ensure `coqc` is on PATH.
+2. `python3 -m venv .venv && source .venv/bin/activate`
 3. `pip install -r requirements.txt`
 
 ### Option B: Docker (recommended for reproducibility)
 
+1. Install Docker
+2. Open a terminal and navigate to the project folder:
+
+```
+cd path/to/llm-ling-proof-bench
+```
+
+3. Build the Docker image:
+
 ```
 docker build -t llm-coq:latest docker/
-# Run mounting the project
+```
+
+This downloads the Coq base image, installs Python, and sets up dependencies.
+
+4. Run the container:
+
+```
 docker run --rm -it -v "$PWD":/work -w /work llm-coq:latest bash
+```
+
+- `-v "$PWD":/work` mounts your current folder inside the container.
+
+- `-w /work` sets the working directory to the mounted folder.
+
+5. Inside the container, you can now run commands, e.g.:
+
+```
+python3 -m src.run --backend baseline -k 1 --limit 2
+```
+
+6. Exit the container:
+
+```
+exit
+```
+
+### Running examples
+
+1. Baseline run (no LLM, uses included correct proofs)
+
+```
+python3 -m src.run --backend baseline -k 1 --limit 2
+```
+
+You should see `2/2` lemmas passed.
+
+2. With an HF model:
+
+For dummy tests in local (CPU):
+
+```
+python3 -m src.run --backend hf --model distilbert/distilgpt2 -k 2 --limit 2
+```
+
+For tests with GPU:
+
+```
+python3 -m src.run --backend hf --model Qwen/Qwen2.5-7B-Instruct -k 5 --limit 2
 ```
 
 ---
