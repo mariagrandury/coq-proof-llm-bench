@@ -1,2 +1,2 @@
-distilbert/distilgpt2
-flax-community/gpt-2-spanish
+meta-llama/Llama-3.1-8B-Instruct
+Qwen/Qwen3-4B-Thinking-2507

@@ -1,0 +1,2 @@
+distilbert/distilgpt2
+flax-community/gpt-2-spanish

@@ -139,7 +139,7 @@ def main():
     ap.add_argument(
         "--n_per_lang",
         type=int,
-        default=20,
+        default=30,
         help="approx. samples per language (uniform across patterns)",
     )
     ap.add_argument("--seed", type=int, default=42)

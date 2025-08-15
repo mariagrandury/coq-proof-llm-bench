@@ -195,44 +195,32 @@ python3 -m src.run --backend hf --model distilbert/distilgpt2 -k 2 --limit 5
 ## Generate proofs on a GPU node (no Coq needed)
 
 ```bash
-python -m src.gen_dataset \
+python3 -m src.generate_dataset \
   --out data/lemmas_auto.jsonl \
-  --langs en es fr \
-  --n_per_lang 30 \
-  --seed 7
+  --langs en es fr
 
 # Single model
-python -m src.generate_proofs \
+python3 -m src.generate_proofs \
   --lemmas data/lemmas_auto.jsonl \
-  --backend hf \
-  --model Qwen/Qwen2.5-1.5B-Instruct \
-  -k 5 \
-  --temperature 0.7 \
-  --top_p 0.9 \
-  --max_new_tokens 256 \
-  --outdir results/batch
+  --model Qwen/Qwen2.5-1.5B-Instruct
 
 # Or many models from a file (one HF id per line)
 python3 -m src.generate_proofs \
   --lemmas data/lemmas_auto.jsonl \
-  --backend hf \
-  --models_file models.txt \
-  -k 5 --temperature 0.7 --top_p 0.9 --max_new_tokens 256 \
-  --outdir results/batch
+  --models_file models.txt
 
 Each model writes to results/batch/<model_id_sanitized>/proofs.jsonl.
 
 Verify proofs locally with Coq
 
 # Single proofs file
-python -m src.verify_proofs \
-  --proofs results/batch/Qwen_Qwen2.5-1.5B-Instruct/proofs.jsonl \
-  --timeout 15
+python3 -m src.verify_proofs \
+  --proofs results/batch/Qwen_Qwen2.5-1.5B-Instruct/proofs.jsonl
 
 # Or verify all subfolders under a directory
 python3 -m src.verify_proofs \
-  --proofs_dir results/batch \
-  --timeout 15
+  --proofs_dir results/batch
+```
 
 This writes, per model:
 
