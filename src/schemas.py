@@ -17,6 +17,7 @@ class LemmaSpec:
     allowed_tactics: List[str]
     difficulty: str
     timeout_sec: int
+    lang: Optional[str] = None
     requires_classical: bool = False
     baseline_proof: Optional[str] = None
 
