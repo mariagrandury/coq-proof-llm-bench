@@ -24,6 +24,7 @@ coq-proof-llm-bench/
         run.py                # CLI entry point for running experiments
         gen_dataset.py        # CLI to generate multilingual JSONL dataset
         ling_grammar.py       # Controlled grammar, lexicon, templates, and logic builders
+        batch_eval.py         # Evaluate a list of HF models and aggregate stats
     results/                  # Stores logs and outputs after runs
 ```
 
@@ -48,6 +49,8 @@ To evaluate models:
 5. `check_coq.py` compiles the `.v` file with `coqc` to check validity.
 
 6. Results are logged in `results/`.
+
+Optionally, evaluate a batch of models with `batch_eval.py`.
 
 ---
 
@@ -124,11 +127,25 @@ For tests with GPU:
 python3 -m src.run --backend hf --model Qwen/Qwen2.5-7B-Instruct -k 5 --limit 2
 ```
 
+3. Evaluate a batch of models:
+
+```
+python3 -m src.batch_eval \
+  --lemmas data/lemmas_auto.jsonl \
+  --models Qwen/Qwen2.5-1.5B-Instruct mistralai/Mistral-7B-Instruct-v0.3 \
+  -k 5 --temperature 0.7 --top_p 0.9 --max_new_tokens 256 \
+  --outdir results/batch --limit 0
+```
+
+You can also pass a file (one model id per line):
+
+```
+python3 -m src.batch_eval --lemmas data/lemmas.jsonl --models_file models.txt -k 5 --outdir results/batch
+```
 
 ---
 
 ## 4. Dataset
-
 
 ### 4.1. Dataset description
 
