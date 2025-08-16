@@ -156,10 +156,6 @@ def sample_proof(lemma: LemmaSpec, cfg: GenConfig, try_idx: int, model_id: str) 
     Returns:
         Generated proof text normalized to Proof/Qed format
 
-    Raises:
-        ValueError: If backend is not supported
-        RuntimeError: If generation fails
-
     Example:
         >>> config = GenConfig(backend="hf", max_new_tokens=256)
         >>> proof = sample_proof(lemma, config, 0, "gpt2")
@@ -169,16 +165,11 @@ def sample_proof(lemma: LemmaSpec, cfg: GenConfig, try_idx: int, model_id: str) 
     # Handle baseline backend
     if cfg.backend == "baseline":
         baseline_proof = getattr(lemma, "baseline_proof", "Proof. Fail trivial. Qed.")
-        return _normalize_to_block(baseline_proof)
+        return "Prompt", _normalize_to_block(baseline_proof)
 
     # Handle Hugging Face backend
     if cfg.backend == "hf":
         session = _load_hf_session(model_id)
         prompt = build_prompt(lemma)
         generated_text = _generate_hf_proof(session, prompt, cfg, try_idx)
-        return _normalize_to_block(generated_text)
-
-    # Unsupported backend
-    raise ValueError(
-        f"Unsupported backend '{cfg.backend}', expected 'baseline' or 'hf'."
-    )
+        return prompt, _normalize_to_block(generated_text)

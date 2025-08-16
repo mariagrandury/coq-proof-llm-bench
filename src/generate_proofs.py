@@ -40,12 +40,18 @@ def load_lemmas(path: str) -> List[LemmaSpec]:
 
 
 def create_proof_row(
-    lemma: LemmaSpec, proof: str, model_id: str, cfg: GenConfig, try_idx: int
+    lemma: LemmaSpec,
+    prompt: str,
+    proof: str,
+    model_id: str,
+    cfg: GenConfig,
+    try_idx: int,
 ) -> Dict[str, Any]:
     """Create a proof result row for output.
 
     Args:
         lemma: Lemma specification
+        prompt: Prompt used for generation
         proof: Generated proof text
         model_id: Model identifier used
         cfg: Generation configuration
@@ -69,6 +75,7 @@ def create_proof_row(
         },
         "coq_prelude": getattr(lemma, "coq_prelude", []),
         "statement": lemma.statement,
+        "prompt": prompt,
         "proof": proof,
     }
 
@@ -100,8 +107,8 @@ def generate_for_model(
     # Generate proofs for each lemma
     for lemma in lemmas:
         for try_idx in range(cfg.k):
-            proof = sample_proof(lemma, cfg, try_idx=try_idx, model_id=model_id)
-            rows.append(create_proof_row(lemma, proof, model_id, cfg, try_idx))
+            prompt, proof = sample_proof(lemma, cfg, try_idx=try_idx, model_id=model_id)
+            rows.append(create_proof_row(lemma, prompt, proof, model_id, cfg, try_idx))
 
     # Create output directory and write results
     model_name = model_id if model_id else "baseline"
