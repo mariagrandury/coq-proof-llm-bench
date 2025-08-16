@@ -10,8 +10,6 @@ This project maps natural language entailments to Coq lemmas, prompts an LLM to 
 coq-proof-llm-bench/
     README.md                 # This guide
     requirements.txt          # Python dependencies
-    docker/
-        Dockerfile            # Docker setup for Coq + Python environment
     data/
         lemmas.jsonl          # Small benchmark of linguistic lemmas
     src/
@@ -56,50 +54,10 @@ Optionally, evaluate a batch of models with `batch_eval.py`.
 
 ## 2. Setup
 
-### Option A: Local (Python + Coq installed)
-
 1. Install **Coq 8.18.x** and ensure `coqc` is on PATH.
 2. `python3 -m venv .venv && source .venv/bin/activate`
 3. `pip install -r requirements.txt`
 
-### Option B: Docker (recommended for reproducibility)
-
-1. Install Docker
-2. Open a terminal and navigate to the project folder:
-
-```
-cd path/to/llm-ling-proof-bench
-```
-
-3. Build the Docker image:
-
-```
-docker build -t llm-coq:latest docker/
-```
-
-This downloads the Coq base image, installs Python, and sets up dependencies.
-
-4. Run the container:
-
-```
-docker run --rm -it -v "$PWD":/work -w /work llm-coq:latest bash
-```
-
-- `-v "$PWD":/work` mounts your current folder inside the container.
-
-- `-w /work` sets the working directory to the mounted folder.
-
-5. Inside the container, you can now run commands, e.g.:
-
-```
-python3 -m src.run --backend baseline -k 1 --limit 2
-```
-
-6. Exit the container:
-
-```
-exit
-```
 
 ---
 
