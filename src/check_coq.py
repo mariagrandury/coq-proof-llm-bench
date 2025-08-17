@@ -18,6 +18,11 @@ def check_with_coqc(coq_text: str, timeout_sec: int = 15) -> Tuple[bool, str, st
                 text=True,
             )
             ok = cp.returncode == 0
-            return ok, cp.stdout, cp.stderr
+            # cp.stderr is a string like this:
+            # File "/var/folders/pk/f15jrt057cx1gb096dmkkm900000gn/T/tmpxngfb9es/proof.v", line 8, characters 23-24:
+            # Error:
+            # Syntax error: [ltac_use_default] expected after [tactic] (in [tactic_command]).
+            error = cp.stderr.split("Error:")[1].strip()
+            return ok, error
         except subprocess.TimeoutExpired:
             return False, "", f"TIMEOUT after {timeout_sec}s"

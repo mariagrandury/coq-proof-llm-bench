@@ -42,7 +42,7 @@ def verify_proofs_file(proofs_path: str, timeout: int) -> Dict[str, Any]:
                 )(),
                 t["proof"],
             )
-            ok, so, se = check_with_coqc(coq_text, timeout_sec=timeout)
+            ok, error = check_with_coqc(coq_text, timeout_sec=timeout)
             all_rows.append(
                 {
                     "id": lid,
@@ -50,7 +50,7 @@ def verify_proofs_file(proofs_path: str, timeout: int) -> Dict[str, Any]:
                     "category": t.get("category"),
                     "difficulty": t.get("difficulty"),
                     "ok": ok,
-                    "stderr": se,
+                    "stderr": error,
                     "model": t.get("model"),
                     "try_idx": t["try_idx"],
                     "proof": t["proof"],
