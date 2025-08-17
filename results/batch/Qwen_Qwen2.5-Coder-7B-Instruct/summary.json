@@ -1,0 +1,43 @@
+{
+  "overall": {
+    "n_lemmas": 90,
+    "pass1": 0.0,
+    "passk": 0.0
+  },
+  "by_lang": {
+    "en": {
+      "n": 30,
+      "pass1": 0.0,
+      "passk": 0.0
+    },
+    "es": {
+      "n": 30,
+      "pass1": 0.0,
+      "passk": 0.0
+    },
+    "fr": {
+      "n": 30,
+      "pass1": 0.0,
+      "passk": 0.0
+    }
+  },
+  "by_category": {
+    "quantifiers": {
+      "n": 60,
+      "pass1": 0.0,
+      "passk": 0.0
+    },
+    "negation": {
+      "n": 30,
+      "pass1": 0.0,
+      "passk": 0.0
+    }
+  },
+  "by_difficulty": {
+    "mild": {
+      "n": 90,
+      "pass1": 0.0,
+      "passk": 0.0
+    }
+  }
+}
