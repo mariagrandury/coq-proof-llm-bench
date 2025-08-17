@@ -50,6 +50,8 @@ help: ## Show this help message
 	@echo "  make proofs MODEL=llama-3.1     # Generate proofs with custom model"
 	@echo "  make verify                     # Verify all proofs in results/batch"
 	@echo "  make stats                      # Calculate statistics for all results"
+	@echo "  make visualize                  # Create comprehensive visualization plots"
+	@echo "  make stats-visualize            # Calculate stats and create visualizations"
 	@echo "  make pipeline-baseline          # Run full pipeline with baseline"
 	@echo "  make pipeline-dummy             # Run full pipeline with distilgpt2"
 	@echo "  make pipeline MODEL=llama-3.1   # Run full pipeline with custom model"
@@ -138,6 +140,15 @@ stats-file: ## Calculate statistics for a specific results file (set RESULTS_FIL
 	@echo "Calculating statistics for: $(RESULTS_FILE)"
 	$(VENV_ACTIVATE) $(PYTHON) $(MODULE_PREFIX)calculate_stats \
 		--results $(RESULTS_FILE)
+
+# Visualization targets
+visualize: ## Create comprehensive visualization plots
+	@echo "Creating visualization plots..."
+	$(VENV_ACTIVATE) $(PYTHON) $(MODULE_PREFIX)visualize_results
+	@echo "Visualization plots created in plots/ directory!"
+
+stats-visualize: stats visualize ## Calculate stats and create visualizations
+	@echo "Statistics calculated and visualizations created!"
 
 # Full pipeline targets
 pipeline-baseline: dataset proofs-baseline verify stats ## Run complete pipeline with baseline backend
