@@ -12,37 +12,67 @@ def summarize_passk(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     rows: flattened per-try verification results including fields:
       id, ok, lang, category, difficulty, phenomena?, model, try_idx
-    Computes pass@1 and pass@k by lemma, then aggregates simple stratified stats.
+    Computes pass@1, pass@2, pass@3, pass@4, pass@5 by lemma, then aggregates simple stratified stats.
     """
     by_lemma: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
     for r in rows:
         by_lemma[r["id"]].append(r)
 
-    first_success: Dict[str, Dict[str, bool]] = {}
+    # Track which attempt succeeded for each lemma
+    lemma_results: Dict[str, Dict[str, bool]] = {}
     for lid, tries in by_lemma.items():
         tries_sorted = sorted(tries, key=lambda x: x["try_idx"])
-        hit = False
+
+        # Initialize all pass attempts to False
+        result = {
+            "pass1": False,
+            "pass2": False,
+            "pass3": False,
+            "pass4": False,
+            "pass5": False,
+        }
+
+        # Find the first successful attempt
         for t in tries_sorted:
             if t["ok"]:
-                first_success[lid] = {"pass1": (t["try_idx"] == 0), "passk": True}
-                hit = True
+                # Mark the specific attempt as successful
+                attempt_num = t["try_idx"] + 1  # try_idx is 0-based, so add 1
+                if attempt_num <= 5:  # Only track up to pass5
+                    # If we succeed on attempt N, we've also succeeded within N+1, N+2, etc. attempts
+                    for i in range(attempt_num, 6):  # 6 because range is exclusive
+                        result[f"pass{i}"] = True
                 break
-        if not hit:
-            first_success[lid] = {"pass1": False, "passk": False}
 
-    total = len(first_success)
-    p1 = sum(1 for v in first_success.values() if v["pass1"]) / max(1, total)
-    pk = sum(1 for v in first_success.values() if v["passk"]) / max(1, total)
+        lemma_results[lid] = result
+
+    total = len(lemma_results)
+
+    # Calculate pass rates for each attempt
+    p1 = sum(1 for v in lemma_results.values() if v["pass1"]) / max(1, total)
+    p2 = sum(1 for v in lemma_results.values() if v["pass2"]) / max(1, total)
+    p3 = sum(1 for v in lemma_results.values() if v["pass3"]) / max(1, total)
+    p4 = sum(1 for v in lemma_results.values() if v["pass4"]) / max(1, total)
+    p5 = sum(1 for v in lemma_results.values() if v["pass5"]) / max(1, total)
 
     # stratify using metadata present in rows (propagated from generation)
-    def add(acc, key, okv):
+    def add(acc, key, result):
         if key is None:
             return
         if key not in acc:
-            acc[key] = {"n": 0, "pass1": 0, "passk": 0}
+            acc[key] = {
+                "n": 0,
+                "pass1": 0,
+                "pass2": 0,
+                "pass3": 0,
+                "pass4": 0,
+                "pass5": 0,
+            }
         acc[key]["n"] += 1
-        acc[key]["pass1"] += 1 if okv["pass1"] else 0
-        acc[key]["passk"] += 1 if okv["passk"] else 0
+        acc[key]["pass1"] += 1 if result["pass1"] else 0
+        acc[key]["pass2"] += 1 if result["pass2"] else 0
+        acc[key]["pass3"] += 1 if result["pass3"] else 0
+        acc[key]["pass4"] += 1 if result["pass4"] else 0
+        acc[key]["pass5"] += 1 if result["pass5"] else 0
 
     by_lang: Dict[str, Dict[str, int]] = {}
     by_cat: Dict[str, Dict[str, int]] = {}
@@ -59,7 +89,7 @@ def summarize_passk(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
                 # 'phenomena' may be added later if needed
             }
 
-    for lid, res in first_success.items():
+    for lid, res in lemma_results.items():
         meta = lemma_meta.get(lid, {})
         add(by_lang, meta.get("lang"), res)
         add(by_cat, meta.get("category"), res)
@@ -69,11 +99,25 @@ def summarize_passk(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
         out = {}
         for k, v in d.items():
             n = max(1, v["n"])
-            out[k] = {"n": v["n"], "pass1": v["pass1"] / n, "passk": v["passk"] / n}
+            out[k] = {
+                "n": v["n"],
+                "pass1": v["pass1"] / n,
+                "pass2": v["pass2"] / n,
+                "pass3": v["pass3"] / n,
+                "pass4": v["pass4"] / n,
+                "pass5": v["pass5"] / n,
+            }
         return out
 
     return {
-        "overall": {"n_lemmas": total, "pass1": p1, "passk": pk},
+        "overall": {
+            "n_lemmas": total,
+            "pass1": p1,
+            "pass2": p2,
+            "pass3": p3,
+            "pass4": p4,
+            "pass5": p5,
+        },
         "by_lang": finalize(by_lang),
         "by_category": finalize(by_cat),
         "by_difficulty": finalize(by_diff),
