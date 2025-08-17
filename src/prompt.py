@@ -10,21 +10,24 @@ def build_prompt(lemma: LemmaSpec) -> str:
     nl_block = "\n".join([f"- {p}" for p in lemma.nl_premises])
     return f"""
 You are a Coq assistant verifying a linguistic entailment.
-Phenomena: {phenomena}.
-Only output Coq between 'Proof.' and 'Qed.'. No comments, no explanations.
 
+Your task is to produce a single valid Coq proof script for the lemma below. Start the proof after 'Proof.' and end it with 'Qed.'. Do not restate the lemma and do not include explanations. Ensure the script type-checks end-to-end under Coq's kernel.
+
+Phenomena: {phenomena}.
 Allowed tactics: {tactics}.
 
 Prelude:
 {imports_block}
 
-Lemma:
+Lemma to prove:
 {lemma.statement}
 
 (Informal gloss)
-Premises:\n{nl_block}\nHypothesis: {lemma.nl_hypothesis}
+Premises:
+{nl_block}
+Hypothesis: {lemma.nl_hypothesis}
 Logic notes: {lemma.logic_notes}
 
-Now output:
+Proof without additional comments:
 Proof.
 """.strip()

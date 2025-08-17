@@ -1,2 +1,8 @@
-meta-llama/Llama-3.1-8B-Instruct
+Qwen/Qwen2.5-7B
+HuggingFaceTB/SmolLM3-3B
+Qwen/Qwen2.5-Coder-3B-Instruct
+meta-llama/Llama-3.2-3B-Instruct
+Qwen/Qwen3-4B-Instruct-2507
+deepseek-ai/deepseek-llm-7b-chat
 Qwen/Qwen3-4B-Thinking-2507
+meta-llama/Llama-3.1-8B-Instruct
